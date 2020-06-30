@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+    id "com.github.johnrengelman.shadow" version "5.2.0"
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+shadowJar {
+    archiveFileName.set(rootProject.name + ".jar")
+    manifest {
+        attributes("Main-Class": "de.heisluft.Bootstrap")
+    }
+}
+
+dependencies {
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.13.0'
+    implementation 'org.eclipse.jetty:jetty-server:9.4.25.v20191220'
+}

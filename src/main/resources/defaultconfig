@@ -1,0 +1,3 @@
+#This config file enumerates all relay gpios and their function in the format
+#GPIO, Function
+#23, MyCoolDevice

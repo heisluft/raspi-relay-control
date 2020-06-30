@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Relay Status - RasPi</title>
+    <style>
+        body {
+            background: #bbb;
+            text-align: center;
+            font-family: sans-serif;
+        }
+
+        table {
+            width: 50%;
+            margin: auto;
+            border-collapse: collapse;
+            box-sizing: border-box;
+        }
+
+        thead tr {
+            background: #555;
+            color: #fff;
+        }
+
+        td {
+        / / padding: 20 px;
+        }
+
+        tr {
+            background: #aaa;
+        }
+
+        tr:nth-child(even) {
+            background: #888;
+        }
+
+        button {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 20px;
+            cursor: pointer;
+            transition: background 1s
+        }
+
+        .on {
+            background: radial-gradient(#88f, #33b);
+            transition: background 1s
+        }
+
+        button:hover {
+            background: radial-gradient(#88f, #88f, #33b);
+            transition: background 1s
+        }
+
+        .off {
+            background: #33b;
+            transition: background 1s
+        }
+
+        button[disabled] {
+            cursor: not-allowed;
+        }
+
+        button[disabled]:hover {
+            background: inherit;
+            transition: none;
+        }
+
+        td {
+            border: 1px solid #000;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<h1>RasPi Relay Monitoring</h1>
+<table>
+    <thead>
+    <tr>
+        <td>Relay</td>
+        <td>GPIO</td>
+        <td>On / Off</td>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+<script>
+    "use-strict";
+    var buttons = [];
+
+    function update() {
+        buttons.forEach(function (button) {
+            button.innerText = "Checking Status...";
+            button.setAttribute("disabled", "disabled");
+            button.className = null;
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState != 4) return;
+                if (this.status != 200) {
+                    button.innerText = "Could Not Reach Backend (Try reloading the page)";
+                    return;
+                }
+                button.removeAttribute("disabled");
+                button.className = button.innerText = (this.responseText == 1 ? "on" : "off");
+            };
+            xhttp.open("GET", "/gpio" + button.id, true);
+            xhttp.send();
+        })
+    }
+
+    (function () {
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState != 4) return;
+            if (this.status != 200) {
+                document.getElementsByTagName("h1")[0].innerText = "Could Not Reach Backend (Try reloading the page)";
+                return;
+            }
+            let entries = this.responseText.split("\n");
+            let tbody = document.getElementsByTagName("tbody")[0];
+            for (let i in entries) {
+                let entry = entries[i];
+                if(entry.startsWith("#") || entry.length == 0) continue;
+                let row = document.createElement("tr");
+                let split = entry.split(",");
+                let desctd = document.createElement("td");
+                desctd.innerText = split[1].length == 0 ? "Unused" : split[1].substr(1);
+                row.appendChild(desctd);
+                let gpio = split[0];
+                let ptd = document.createElement("td");
+                ptd.innerText = gpio;
+                row.appendChild(ptd);
+                let button = document.createElement("button");
+                button.id = gpio;
+                let buttonContainer = document.createElement("td");
+                buttonContainer.appendChild(button);
+                button.addEventListener("click", function () {
+                    if (button.hasAttribute("disabled")) return;
+                    let xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function () {
+                        if (this.readyState == 4) {
+                            if (this.status != 204) {
+                                button.innerText = "Could Not Reach Backend (Try reloading the page)";
+                                return;
+                            }
+                            update();
+                        }
+                    };
+                    xhttp.open("POST", "/gpio" + button.id, true);
+                    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                    var v = button.innerText == "on" ? 0 : 1;
+                    xhttp.send("value=" + v);
+                })
+                row.appendChild(buttonContainer);
+                buttons.push(button);
+                tbody.appendChild(row);
+            }
+            update();
+        };
+        xhttp.open("GET", "/config", true);
+        xhttp.send();
+    })();
+</script>
+</body>
+</html>

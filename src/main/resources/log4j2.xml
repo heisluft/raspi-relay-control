@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
+    <Properties>
+        <Property name="logPath">/var/log/relay-monitor</Property>
+    </Properties>
+    <ThresholdFilter level="trace"/>
+    <Appenders>
+        <Appender type="File" name="logFile" fileName="${logPath}/log.txt">
+            <Layout type="PatternLayout" pattern="[%d{HH:mm:ss}] [%t/%logger] [%level]: %msg%n"/>
+        </Appender>
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%logger] [%level]: %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="logfile"/>
+        </Root>
+    </Loggers>
+</Configuration>
